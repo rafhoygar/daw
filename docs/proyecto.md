@@ -56,7 +56,9 @@ En este proyecto se describe la instalación de un servidor FTP en el sistema op
 
 
 ### 1. Nos aseguramos de tener el sistema y la lista de paquetes actualizado
+
 - Utilizamos los comandos :
+
 ```bash
 sudo apt update → Actualizamos lista de paquetes.
 ```
@@ -87,13 +89,15 @@ sudo apt upgrade → Actualizamos el sistema
  - Está funcionando correctamente (indica: active (running)).
 
 ### 3. Configurar el Firewall (nftables) Debian 11 usa nftables por defecto.
+
  - Si necesitáramos configurar nuestro servidor Debian de forma remota, sería necesario ejecutar el siguiente comando:
+
  ```bash
  ssh -l rafael-administrador 192.168.1.128
  ```
  Este comando inicia una sesión SSH en nuestro servidor, permitiéndonos ejecutar comandos de forma remota.
 
-#### 3.1.Primero debemos permitir el tráfico en el puerto FTP estándar (puerto 21):
+#### 3.1. Primero debemos permitir el tráfico en el puerto FTP estándar (puerto 21):
  ```bash
  sudo nft add rule ip filter input tcp dport { 21 } ct state new accept
  ```
@@ -102,6 +106,7 @@ sudo apt upgrade → Actualizamos el sistema
 
 
  - Se nos indica que no es posible procesar la regla. Esto se debe a que el directorio o archivo filter no existe. Debemos crear la tabla filter, que debería existir de manera predeterminada en nftables. Antes comprobamos si de verdad no existe con el comando:
+
  ```bash
  sudo nft list tables
  ```
@@ -112,8 +117,10 @@ sudo apt upgrade → Actualizamos el sistema
 
  **table ip filter**
 
-##### 3.1.1.Vamos a crear la tabla filter, la cadena input y luego agregar la regla para permitir el tráfico FTP en el puerto 21. 
+##### 3.1.1. Vamos a crear la tabla filter, la cadena input y luego agregar la regla para permitir el tráfico FTP en el puerto 21.
+
  - Creamos la tabla filter. Usamos el siguiente comando:
+
  ```bash
  sudo nft add table ip filter
  ```
@@ -121,6 +128,7 @@ sudo apt upgrade → Actualizamos el sistema
  ![Creamos tabla filter ](capturas_de_pantalla/captura7pag6.png)
 
  - Creamos la cadena input dentro de la tabla filter. Usamos el siguiente comando:
+
  ```bash
  sudo nft add chain ip filter input { type filter hook input priority 0 \; }
  ```
@@ -128,16 +136,19 @@ sudo apt upgrade → Actualizamos el sistema
  ![Creamos la cadena input dentro de la tabla filter ](capturas_de_pantalla/captura8pag6.png)
     
  - Agregar la regla para permitir el puerto 21 (FTP). Usamos el siguiente comando:
+
  ```bash
  sudo nft add rule ip filter input tcp dport {21} ct state new,established accept
  ```  
- Añadimos a la regla “established”. Esto permite que el tráfico posterior, como la transferencia de archivos, sea aceptado. Garantizamos que las transferencias de archivos se puedan realizar correctamente después de establecer la conexión inicial al puerto 21.  Si no usamos “established”, las conexiones de respuesta (como la transferencia de archivos) serían bloqueadas, y aunque el usuario FTP puede autenticarse correctamente, no podrá transferir archivos. 
- Usar solo new hará que el servidor solo permita conexiones nuevas al puerto 21, pero no permitirá que esas conexiones nuevas continúen para transferir archivos (el tráfico posterior de una conexión FTP).
+ - Añadimos a la regla “established”. Esto permite que el tráfico posterior, como la transferencia de archivos, sea aceptado. Garantizamos que las transferencias de archivos se puedan realizar correctamente después de establecer la conexión inicial al puerto 21.  Si no usamos “established”, las conexiones de respuesta (como la transferencia de archivos) serían bloqueadas, y aunque el usuario FTP puede autenticarse correctamente, no podrá transferir archivos.
+
+ - Usar solo "new" hará que el servidor solo permita conexiones nuevas al puerto 21, pero no permitirá que esas conexiones nuevas continúen para transferir archivos (el tráfico posterior de una conexión FTP).
     
  ![Agregamos la regla ](capturas_de_pantalla/captura9pag7.png)
 
        
  - Para asegurarnos que la regla se ha guardado correctamente usamos el siguiente comando:
+
  ```bash
  sudo nft list ruleset
  ```
@@ -147,20 +158,23 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Podemos ver que se ha creado correctamente la regla.
 
-#### 3.2.Para asegurarnos de que la configuración persista después de un reinicio, deberíamos guardar las reglas:
+#### 3.2. Para asegurarnos de que la configuración persista después de un reinicio, deberíamos guardar las reglas:
  ```bash
  sudo nft list ruleset > /etc/nftables.conf → se me deniega el permiso. 
  ```
+ 
  - Usamos el siguiente comando para evitar los problemas con los permisos:
+
  ```bash
  sudo sh -c 'nft list ruleset > /etc/nftables.conf'
  ```
- La redirección de salida es manejada por el shell del usuario, no por el proceso de sudo. Por eso, aunque ejecutemos nft con sudo, el archivo no se puede escribir si no usamos la forma correcta de redirigir la salida.  Con esto guardamos las reglas actuales en el archivo de configuración de nftables, lo que garantiza que se carguen después de reiniciar y persistan.
+
+ - La redirección de salida es manejada por el shell del usuario, no por el proceso de sudo. Por eso, aunque ejecutemos nft con sudo, el archivo no se puede escribir si no usamos la forma correcta de redirigir la salida.  Con esto guardamos las reglas actuales en el archivo de configuración de nftables, lo que garantiza que se carguen después de reiniciar y persistan.
  
  ![Guardamos las reglas ](capturas_de_pantalla/captura11pag9.png)
 
 
-##### 3.2.1.Comprobamos si se ha creado correctamente el archivo nftables.conf
+##### 3.2.1. Comprobamos si se ha creado correctamente el archivo nftables.conf
  ```bash
  ls /etc/nftables.conf
  ```
@@ -170,7 +184,7 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Se ha creado el archivo.
 
-##### 3.2.2.Verificamos los permisos del archivo /etc/nftables.conf:
+##### 3.2.2. Verificamos los permisos del archivo /etc/nftables.conf:
  ```bash
  ls -l /etc/nftables.conf
  ```
@@ -179,7 +193,7 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Tenemos los permisos necesarios. 
 
-##### 3.2.3.Verificamos el contenido del archivo /etc/nftables.conf para asegurarnos de que las reglas se hayan guardado correctamente. Usamos el comando:
+##### 3.2.3. Verificamos el contenido del archivo /etc/nftables.conf para asegurarnos de que las reglas se hayan guardado correctamente. Usamos el comando:
  ```bash
  cat /etc/nftables.conf
  ```
@@ -188,7 +202,7 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Si se ha guardado.
 
-##### 3.2.4. Antes de proseguir, tenemos que estar seguros de tener nftables instalado, puede que no esté instalado de forma prederteminada (normalmente al instalar debian se instala nftables de forma prederteminada):
+##### 3.2.4. Antes de proseguir, tenemos que estar seguros de tener nftables instalado, puede que no esté instalado de forma predeterminada (normalmente al instalar debian se instala nftables de forma predeterminada):
  ```bash
  nft --version
  ```
@@ -196,6 +210,7 @@ sudo apt upgrade → Actualizamos el sistema
  ![Comprobamos que nftables esté instalado ](capturas_de_pantalla/captura15pag11.png)
 
  - No está instalado o está en una ubicación no accesible. Es importante que instalemos nftables para que funcione correctamente luego con vsftpd.
+
  ```bash
  sudo apt update  → Actualizamos paquetes.
  sudo apt install nftables → Instalamos nftables
@@ -206,7 +221,7 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Todo correcto. Ya estaba instalado.
 
-##### 3.2.5.Miramos si el servicio esta funcionando correctamente:
+##### 3.2.5. Miramos si el servicio esta funcionando correctamente:
  ```bash
  sudo systemctl status nftables
  ```
@@ -215,7 +230,7 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Funciona.
 
-##### 3.2.6.Para cargar y aplicar las reglas guardadas desde /etc/nftables.conf debemos usar el siguiente comando:
+##### 3.2.6. Para cargar y aplicar las reglas guardadas desde /etc/nftables.conf debemos usar el siguiente comando:
  ```bash
  sudo nft -f /etc/nftables.conf
  ```
@@ -223,6 +238,7 @@ sudo apt upgrade → Actualizamos el sistema
  ![Aplicamos las reglas ](capturas_de_pantalla/captura18pag14.png)
 
  - Para hacer que nftables cargue automáticamente las reglas al reiniciar el sistema, habilitamos el servicio con:
+
  ```bash 
  sudo systemctl enable nftables.service
  ```
@@ -231,10 +247,11 @@ sudo apt upgrade → Actualizamos el sistema
 
  - Mediante el uso de este comando, nftables se inicia con el sistema y cargue las reglas guardadas en /etc/nftables.conf.
 
-#### 3.3.Finalmente podemos verificar si el Puerto 21 está abierto. Usamos el siguiente comando:
+#### 3.3. Finalmente podemos verificar si el Puerto 21 está abierto. Usamos el siguiente comando:
  ```bash
  ss -tuln | grep 21
  ```
+
   - Este comando debe mostrar si el puerto 21 está abierto y escuchando en el sistema. 
  
  ![Verificamos que el puerto 21 esté abierto ](capturas_de_pantalla/captura20pag15.png)
@@ -244,6 +261,7 @@ sudo apt upgrade → Actualizamos el sistema
 ### 4. Configurar vsftpd
 
 - El archivo de configuración principal se encuentra en /etc/vsftpd.conf. Es una buena práctica hacer una copia de seguridad del archivo original antes de modificarlo. Usamos el siguiente comando:
+
 ```bash
 sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
 ```
@@ -255,7 +273,7 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  sudo nano /etc/vsftpd.conf
  ```
 
-##### 4.1.1.Modificamos o añadimos las siguientes líneas para una configuración básica segura (tenemos que asegurarnos de que las opciones que queramos usar estén descomentadas):
+##### 4.1.1. Modificamos o añadimos las siguientes líneas para una configuración básica segura (tenemos que asegurarnos de que las opciones que queramos usar estén descomentadas):
  ```bash
  listen=NO      →Si usas systemd para manejar los sockets, lo cual es común en Debian 11 
  listen_ipv4=YES →En nuestro caso se nos indica IPv6, pero no es ningún problema, también escucha IPv4.
@@ -276,7 +294,9 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  - Presionamos Ctrl + X, decimos que Si queremos guardar y salimos presionando Enter.
 
 ### 5. Reiniciar el Servicio vsftpd 
+
  - Después de realizar los cambios en el archivo de configuración, reiniciamos el servicio para que surtan efecto:
+
  ```bash
  sudo systemctl restart vsftpd
  ```
@@ -284,7 +304,9 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  ![Reiniciamos el servicio vsftpd ](capturas_de_pantalla/captura24pag18.png)
 
 ### 6. Crear un Usuario FTP (opcional)
- - Podemos usar un usuario del sistema existente o crear uno nuevo específicamente para FTP: 
+
+ - Podemos usar un usuario del sistema existente o crear uno nuevo específicamente para FTP:
+
  ```bash
  sudo useradd -m ftp_user → sustituimos  ftp_user por el nombre de usuario deseado (rafaelHoyo).
  sudo passwd ftp_user → ftp_user indicamos el nombre de usuario elegido (1234RH-)
@@ -292,20 +314,22 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  
  ![Creamos un usuario ](capturas_de_pantalla/captura25pag19.png)
 
-#### 6.1.Para ver los usuarios ftp existentes podemos usar el comando:
+#### 6.1. Para ver los usuarios ftp existentes podemos usar el comando:
  ```bash
  cat /etc/passwd
  ```
  
  ![Verificamos si se ha creado el usuario correctamente ](capturas_de_pantalla/captura26pag19.png)
 
-### 7. Acceder al Servidor FTP 
-- Podemos usar un cliente FTP como FileZilla o la línea de comandos en otro equipo para conectarnos al servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado. 
-**La IP del servidor es: 192.168.1.128**
-**Nombre usuario: rafaelHoyo**
-**Contraseña: 1234RH-**
+### 7. Acceder al Servidor FTP
 
-#### 7.1 Nosotros usaremos FileZilla. Si no lo tuviéramos instalado, seguiríamos los siguientes pasos:
+- Podemos usar un cliente FTP como FileZilla o la línea de comandos en otro equipo para conectarnos al servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado. 
+
+- **La IP del servidor es: 192.168.1.128**
+- **Nombre usuario: rafaelHoyo**
+- **Contraseña: 1234RH-**
+
+#### 7.1. Nosotros usaremos FileZilla. Si no lo tuviéramos instalado, seguiríamos los siguientes pasos:
 
  - Descargar cliente FTP Filezilla desde https://filezilla-project.org/.
  
@@ -324,11 +348,12 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  ![FileZilla ](capturas_de_pantalla/captura29pag21.png)
 
 
-#### 7.2.Nos conectamos al servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado. 
- **Servidor: 192.168.1.128**
- **Nombre de usuario: rafaelHoyo**
- **Contraseña: 1234RH-**
- **Puerto: 21**
+#### 7.2. Nos conectamos al servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado.
+
+ - **Servidor: 192.168.1.128**
+ - **Nombre de usuario: rafaelHoyo**
+ - **Contraseña: 1234RH-**
+ - **Puerto: 21**
 
  - Una vez hemos introducido los datos, presionamos en el botón que dice “Conexión rápida”.
  
@@ -397,24 +422,29 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
  
  ![Reiniciamos los servicios vsftpd ](capturas_de_pantalla/captura35pag24.png)
 
-##### 7.2.1.Volvemos a probar la conexión con el servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado.
+##### 7.2.1. Volvemos a probar la conexión con el servidor utilizando la dirección IP del servidor, el nombre de usuario y la contraseña que hemos configurado.
 
  ![Probamos conexión servidor-cliente ](capturas_de_pantalla/captura36pag25.png)
 
  - Ahora sí ha funcionado.
 
- Debido al uso de un acento, el nombre de la carpeta no es correcto, no se reconoce “´”. 
+### 8. Debido al uso de un acento, el nombre de la carpeta no es correcto, no se reconoce “´”.
+
  - Simplemente renombramos la carpeta con el comando:
+
  ```bash
  sudo mv /home/rafaelHoyo/prácticaRA4.1 /home/rafaelHoyo/practicaRA4.1
  ```
+
  - Asignamos la propiedad de la carpeta al usuario y reiniciamos vsftpd:
+
  ```bash
  sudo chown rafaelHoyo:rafaelHoyo /home/rafaelHoyo/practicaRA4.1
  sudo systemctl restart vsftpd → Reiniciamos
  ```
  
  ![Cambiamos nombre de la carpeta ](capturas_de_pantalla/captura37pag26.png)
+
 
  - Veamos si ahora el nombre de la carpeta ahora es correcto en Filezilla:
  
@@ -424,8 +454,9 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
 
  - Ahora sí.
 
- - También podemos comprobar si funciona correctamente el cortafuegos NFTABLES, donde indicamos anteriormente que sólo estará libre el puerto 21 (puerto prederteminado para usar FTP).
- Cambiamos el puerto 21 por el puerto 20:
+#### 8.1. También podemos comprobar si funciona correctamente el cortafuegos NFTABLES, donde indicamos anteriormente que sólo estará libre el puerto 21 (puerto prederteminado para usar FTP).
+
+ - Cambiamos el puerto 21 por el puerto 20:
 
  
  ![Comprobamos con puerto 20 ](capturas_de_pantalla/captura39pag27.png)
@@ -436,25 +467,25 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
 ### 9. La conexión mediante FTP no es segura, ya que transmite datos, incluyendo contraseñas, en texto plano. Por ello, a continuación, cambiaremos la configuración de vsftpd para usar una comunicación más segura. Tendremos que usar SFTP (que corre sobre SSH) o FTPS (FTP sobre SSL/TLS). Nosotros aplicaremos FTPS sobre TLS. Esto habilitará el cifrado de la sesión FTP, haciendo que las credenciales y los archivos transferidos sean más seguros.
 
 - Añadiremos las siguientes líneas en el archivo de configuración:
-```bash
-ssl_enable=YES → Habilitará el cifrado de la sesión FTP, haciendo que las credenciales y los archivos transferidos sean más seguros. 
-(Comentamos los archivos rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key y usamos los que crearemos a continuación)
-rsa_cert_file=/etc/ssl/certs/vsftpd.crt
-rsa_private_key_file=/etc/ssl/private/vsftpd.key → Parámetros para especificar los certificados SSL para un mayor nivel de seguridad
 
-allow_anon_ssl=NO
-force_local_data_ssl=YES
-force_local_logins_ssl=YES
-ssl_protocols TLSv1.2 TLSv1.3
-ssl_sslv2=NO
-ssl_sslv3=NO
-require_ssl_reuse=NO
-ssl_ciphers=HIGH
+```bash
+ssl_enable=YES →  Habilitará el cifrado de la sesión FTP, haciendo que las credenciales y los archivos transferidos sean más seguros. (Comentamos los archivos rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem y rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key y usamos los que crearemos a continuación)
+rsa_cert_file=/etc/ssl/certs/vsftpd.crt
+rsa_private_key_file=/etc/ssl/private/vsftpd.key →  Parámetros para especificar los certificados SSL para un mayor nivel de seguridad
+
+allow_anon_ssl=NO →  No permite que los usuarios anónimos usen SSL/TLS. 
+force_local_data_ssl=YES →  Obliga a que los datos transferidos (subidas y descargas) por usuarios locales estén cifrados. 
+force_local_logins_ssl=YES →  Obliga a que los usuarios locales inicien sesión mediante SSL/TLS. 
+ssl_tlsv1=NO →  Impide que el servidor acepte conexiones usando TLS 1.0. TLS 1.0 es una versión antigua y considerada insegura, por lo que es buena práctica desactivarla. Nos aseguramos de que solo se acepten TLS 1.2 y 1.3, versiones modernas y seguras. 
+ssl_sslv2=NO →  Desactiva SSL versión 2. SSLv2 es antiguo y muy inseguro, así que se desactiva. 
+ssl_sslv3=NO →  SSLv3 también es inseguro y susceptible a ataques (como POODLE). 
+require_ssl_reuse=NO →  Indica que no se requiere la reutilización de la sesión SSL entre comandos de FTP. Esto es útil para compatibilidad con algunos clientes FTP que no soportan la reutilización de sesión. 
+ssl_ciphers=HIGH →  Especifica qué algoritmos de cifrado usar para TLS. 
 ```
+
 - Pero antes de modificar el archivo de configuración debemos crear los certificados SSL. Los generaremos por OpenSSL.
 
-#### 9.1.Generar certificados por OpenSSL:
+#### 9.1. Generar certificados por OpenSSL:
  ```bash
  sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out /etc/ssl/certs/vsftpd.crt -keyout /etc/ssl/private/vsftpd.key
  ```
@@ -463,11 +494,13 @@ ssl_ciphers=HIGH
 
  - Rellenamos los campos que nos van pidiendo.
 
-#### 9.2.Una vez generados los certificados, procederemos a cambiar la configuración del vsftpd. Modificamos el archivo  /etc/vsftp.conf usando el editor nano:
+#### 9.2. Una vez generados los certificados, procederemos a cambiar la configuración del vsftpd. Modificamos el archivo  /etc/vsftp.conf usando el editor nano:
  ```bash
  sudo nano /etc/vsftpd.conf
  ```
- Anteriormente cambiamos el archivo para tener la siguiente configuración:
+
+ - Anteriormente cambiamos el archivo para tener la siguiente configuración:
+
  ```bash
  listen=NO (si usas systemd para manejar los sockets, lo cual es común en Debian 11)
  listen_ipv6=YES (Dejamos ipv6 indicado por defecto ya que también cubre ipv4.)  
@@ -478,6 +511,7 @@ ssl_ciphers=HIGH
  ```
 
  - Ahora añadimos lo siguiente:
+
  ```bash
  ssl_enable=YES
  rsa_cert_file=/etc/ssl/certs/vsftpd.crt
@@ -497,7 +531,7 @@ ssl_ciphers=HIGH
 
  - Presionamos Ctlr + X, decimos que Si queremos guardar y salimos presionando Enter.
 
-#### 9.3.Una vez realizados los cambios necesarios en el archivo de configuración, reiniciamos el servicio  vsftpd para que surtan efecto: 
+#### 9.3. Una vez realizados los cambios necesarios en el archivo de configuración, reiniciamos el servicio  vsftpd para que surtan efecto: 
  ```bash
  sudo systemctl restart vsftpd
  ```
@@ -506,7 +540,7 @@ ssl_ciphers=HIGH
 
 ### 10. Ahora procederemos a realizar la conexión desde el cliente a nuestro servidor Debian usando Filezilla, esta vez con FTPS.
 
-#### 10.1.Configuramos la conexión para poder conectarnos a nuestro servidor FTP en Debian 
+#### 10.1. Configuramos la conexión para poder conectarnos a nuestro servidor FTP en Debian 
  1. Vamos a Archivo → Gestor de sitios
  
  
@@ -554,7 +588,7 @@ ssl_ciphers=HIGH
 
 ### 11. El modo de transferencia usado en Filezilla es el Pasivo (se abre la conexión de datos al servidor). Nosotros no hemos establecido un rango de puertos pasivos en nuestro servidor, pero funciona igualmente porque el servidor elige automáticamente puertos aleatorios (usualmente >1024).  Se permiten temporalmente esas conexiones porque son “efímeras” y el firewall predeterminado las permite.  
 
-Pero se recomienda definir los puertos pasivos en un rango establecido para tener un mayor control sobre los puertos. Las razones son las siguientes:
+- Pero se recomienda definir los puertos pasivos en un rango establecido para tener un mayor control sobre los puertos. Las razones son las siguientes:
     1. Seguridad 
         ◦ Si no defines el rango, vsftpd usará puertos aleatorios del sistema (>1024).
         ◦ Esto puede exponer puertos inesperados y dificultar el control con firewalls.
@@ -568,13 +602,15 @@ Pero se recomienda definir los puertos pasivos en un rango establecido para tene
         ◦ Clientes FTP (como FileZilla) siempre podrán conectarse a los puertos pasivos definidos.
         ◦ Evita errores intermitentes de transferencia de archivos.
 
-#### 11.1.Abrimos puertos pasivos en NFTABLES 
- Usamos el siguiente comando (usaremos el rango de puertos de 40000-50000 como ejemplo):
+#### 11.1. Abrimos puertos pasivos en NFTABLES 
+
+ - Usamos el siguiente comando (usaremos el rango de puertos de 40000-50000 como ejemplo)
+
  ```bash
  sudo nft add rule ip filter input tcp dport { 40000-50000 } ct state new,established accept
  ```
- y
- guardamos 
+ y guardamos:
+
  ```bash 
  sudo sh -c 'nft list ruleset > /etc/nftables.conf'
  ```
@@ -582,12 +618,14 @@ Pero se recomienda definir los puertos pasivos en un rango establecido para tene
  ![Abrimos puertos pasivos y guardamos ](capturas_de_pantalla/captura49pag35.png)
 
 
-#### 11.2.Añadiremos los puertos pasivos configurados al archivo de configuración de vsftpd:
+#### 11.2. Añadiremos los puertos pasivos configurados al archivo de configuración de vsftpd:
  ```bash
  pasv_min_port=40000
  pasv_max_port=50000
  ```
- Usaremos el siguiente comando para modificarlo:
+
+ - Usaremos el siguiente comando para modificarlo:
+
  ```bash
  sudo nano /etc/vsftpd.conf
  ```
@@ -597,7 +635,7 @@ Pero se recomienda definir los puertos pasivos en un rango establecido para tene
 
  - Presionando Ctrl + X, le decimos Si a guardar y salimos del editor con Enter.
 
-#### 11.3.Reiniciamos el servicio vsftpd:
+#### 11.3. Reiniciamos el servicio vsftpd:
  ```bash
  sudo systemctl restart vsftpd
  ```
@@ -606,10 +644,14 @@ Pero se recomienda definir los puertos pasivos en un rango establecido para tene
 
 ### 12. Por último probamos que el envío de archivos entre el cliente y el servidor funcione correctamente.
 
-#### 12.1.Primero probamos creando una carpeta desde el cliente Filezilla para ver si funciona correctamente la conexión:
- - Creación desde Filezilla de una carpeta en el servidor (Prueba):
+#### 12.1. Primero probamos creando una carpeta desde el cliente Filezilla para ver si funciona correctamente la conexión:
+
+ 1. Creación desde Filezilla de una carpeta en el servidor (Prueba):
+
  - Como tenemos habilitado chroot_local_user=YES en nuestra configuración de vsftpd.conf, el usuario FTP estará restringido a su directorio home y no podrá crear directorios fuera de ese entorno.
+
  - Si intentáramos crear la carpeta fuera del directorio home del usuario (por ejemplo, en / o en un directorio de sistema), esto fallará. Nos dará un error como este: Respuesta:	550 Create directory operation failed.
+
  - Nos tenemos que asegurar de que el directorio de destino esté dentro del directorio home del usuario o un subdirectorio permitido. Nosotros podremos solo crear las carpetas y enviar los archivos al subdirectorio /practicaRA4.1.
 
  
@@ -642,6 +684,9 @@ Pero se recomienda definir los puertos pasivos en un rango establecido para tene
 #### 12.3. Finalmente probamos a enviar una carpeta desde el cliente al servidor
  
  ![Enviamos directorio desde cliente a servidor FileZilla ](capturas_de_pantalla/captura57pag39.png)
+
+
+- **Finalizamos el despliegue.** 
 
 
 
