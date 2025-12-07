@@ -7,5 +7,8 @@ Documentación paso a paso para instalar y configurar un servidor FTP utilizando
 ## Módulo para el que se utiizará el repositorio
 Este repositorio se usará para el módulo **"Despliegue de aplicaciones Web"**.
 
-## Enlaces al repositorio
-- **Repositorio de GitHub**: [rafhoygar/daw](https://github.com/rafhoygar/daw)
+## Tabla con la información del proyecto
+
+|        NOMBRE PROYECTO |                     DESCRIPCIÓN                   |
+|------------------------|---------------------------------------------------|
+| Documenta Servidor FTP | [Ver en GitHub](https://github.com/rafhoygar/daw) |
