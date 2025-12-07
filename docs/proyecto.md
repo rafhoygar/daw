@@ -428,6 +428,8 @@ sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak
 
  - Ahora sí ha funcionado.
 
+ **¡Aviso! La carpeta que se puede observar con el nombre "Prueba", se creó antes de aplicar en la configuración chroot_local_user=YES. El usuario rafaelHoyo, no podrá crear ninguna carpeta directamente en la raíz una vez activado dicho parámetro.**
+
 ### 8. Debido al uso de un acento, el nombre de la carpeta no es correcto, no se reconoce “´”.
 
  - Simplemente renombramos la carpeta con el comando:
