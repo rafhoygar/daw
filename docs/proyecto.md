@@ -49,7 +49,6 @@ En este proyecto se describe la instalación de un servidor FTP en el sistema op
 
 
 ## Plan de Despliegue
-- Instalar un servidor de ftp en debian y un cliente en nuestro sistema anfitrión, indicando los comandos de instalación y los archivos de configuración personalizados. Una vez instalado el cliente Ftp en el sistema anfitrión y realizaremos una transferencia de archivos y creación de carpetas, capturando estas pantallas que demuestren su correcto funcionamiento.
 
 ### Instalar un servidor de ftp en debian
 - Para configurar un servidor FTP en Debian 11, uno de los servidores más comunes y recomendados por su enfoque en la seguridad es vsftpd (Very Secure FTP Daemon). Si bien existen otras alternativas como ProFTPd, vsftpd es ampliamente utilizado debido a sus opciones avanzadas de seguridad y rendimiento. Cabe mencionar que, por defecto, FTP no cifra los datos (incluidas las contraseñas), por lo que, para entornos de producción, se recomienda considerar alternativas más seguras como SFTP (FTP sobre SSH) o FTPS (FTP sobre SSL/TLS).
